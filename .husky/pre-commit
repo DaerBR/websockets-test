@@ -1,0 +1,1 @@
+echo "Checking for TypeScript errors..." && pnpm tsc -b && pnpm exec lint-staged

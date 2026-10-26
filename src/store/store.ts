@@ -1,14 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 
 export function setupStore(preloadedState?: Partial<RootState>) {
-	return configureStore({
-		reducer: {},
-		preloadedState,
-	});
+  return configureStore({
+    reducer: {},
+    preloadedState,
+  });
 }
 
 export const store = configureStore({
-	reducer: {},
+  reducer: {},
 });
 
 export type AppDispatch = typeof store.dispatch;

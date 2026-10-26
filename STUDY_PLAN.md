@@ -14,42 +14,42 @@ Learning WebSockets from scratch, client side first, then the server side. Each 
 
 ---
 
-## Stage 0: How it works 🟡
+## Stage 0: How it works ✅
 
 Goal: know what happens on the wire before writing any code.
 
-- [ ] Why WebSockets exist: limits of HTTP request/response, short polling, long polling
-- [ ] The handshake: an HTTP `GET` with `Upgrade: websocket` + `Sec-WebSocket-Key` → `101 Switching Protocols`
-- [ ] After the upgrade: one persistent TCP connection, **full-duplex** (either side sends at any time)
-- [ ] Frames: text vs binary, fragmentation, masking (client → server only), control frames (ping, pong, close)
-- [ ] `ws://` vs `wss://` (TLS); why `wss://` matters with proxies
-- [ ] Close handshake and close codes (`1000` normal, `1001` going away, `1006` abnormal / no close frame, `1008` policy, `4000–4999` app-defined)
-- [ ] Alternatives and when to choose them: SSE (`EventSource`), polling, plain fetch, WebTransport (just to know it exists)
+- [x] Why WebSockets exist: limits of HTTP request/response, short polling, long polling
+- [x] The handshake: an HTTP `GET` with `Upgrade: websocket` + `Sec-WebSocket-Key` → `101 Switching Protocols`
+- [x] After the upgrade: one persistent TCP connection, **full-duplex** (either side sends at any time)
+- [x] Frames: text vs binary, fragmentation, masking (client → server only), control frames (ping, pong, close)
+- [x] `ws://` vs `wss://` (TLS); why `wss://` matters with proxies
+- [x] Close handshake and close codes (`1000` normal, `1001` going away, `1006` abnormal / no close frame, `1008` policy, `4000–4999` app-defined)
+- [x] Alternatives and when to choose them: SSE (`EventSource`), polling, plain fetch, WebTransport (just to know it exists)
 
 **Task:** Open any site that uses WebSockets (or the Stage 1 echo server), find the handshake in DevTools, and explain each request/response header in your own words.
 
-## Stage 1: The browser `WebSocket` API ⬜
+## Stage 1: The browser `WebSocket` API ✅
 
 Goal: use the native API comfortably, with no libraries.
 
-- [ ] `new WebSocket(url, protocols?)`
-- [ ] Events: `open`, `message`, `error`, `close` (and what `CloseEvent.code / reason / wasClean` mean)
-- [ ] `readyState`: `CONNECTING`, `OPEN`, `CLOSING`, `CLOSED`, and why `send()` before `OPEN` throws
-- [ ] `send()` with strings, `Blob`, `ArrayBuffer`; `binaryType`
-- [ ] `bufferedAmount` and backpressure (basic idea)
-- [ ] Why the `error` event tells you almost nothing (on purpose, for security)
+- [x] `new WebSocket(url, protocols?)`
+- [x] Events: `open`, `message`, `error`, `close` (and what `CloseEvent.code / reason / wasClean` mean)
+- [x] `readyState`: `CONNECTING`, `OPEN`, `CLOSING`, `CLOSED`, and why `send()` before `OPEN` throws
+- [x] `send()` with strings, `Blob`, `ArrayBuffer`; `binaryType`
+- [x] `bufferedAmount` and backpressure (basic idea)
+- [x] Why the `error` event tells you almost nothing (on purpose, for security)
 
 **Task 1:** A plain page (no React yet, or a single bare component) that connects to the echo server, sends text from an input, and logs everything it receives plus every state change.
 **Task 2:** Stop the server while connected and see what `close` gives you. Try a wrong URL and compare.
 
-## Stage 2: Using it in React ⬜
+## Stage 2: Using it in React 🟡
 
 Goal: a socket that behaves correctly with React's lifecycle.
 
-- [ ] Where the socket lives: inside a component, a custom hook, a module singleton, or context
-- [ ] `useEffect` setup and cleanup; the **StrictMode double-mount** trap (two connections, or a closed-too-early socket)
-- [ ] Stale closures in `onmessage` handlers; refs vs state
-- [ ] Turning "socket status" into UI state (connecting, online, offline)
+- [x] Where the socket lives: inside a component, a custom hook, a module singleton, or context
+- [x] `useEffect` setup and cleanup; the **StrictMode double-mount** trap (two connections, or a closed-too-early socket)
+- [x] Stale closures in `onmessage` handlers; refs vs state
+- [x] Turning "socket status" into UI state (connecting, online, offline)
 - [ ] `useSyncExternalStore` as a clean way to subscribe to an external source
 
 **Task:** `useWebSocket(url)` hook → `{ status, lastMessage, send }`. Build a simple chat UI on top of it against the broadcast server (open two tabs).

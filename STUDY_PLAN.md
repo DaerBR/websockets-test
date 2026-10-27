@@ -56,6 +56,8 @@ Goal: a socket that behaves correctly with React's lifecycle.
 
 ## Stage 3: Message design 🟡
 
+> **Paused (2026-10-27).** The original task below bundled too many ideas at once. A finished reference version is in `/rooms` (`src/socket/roomChatStore.ts`, `src/protocol/messages.ts`, server: `pnpm rooms`), with the lesson in `lessons/stage-3-message-design.md`. When resuming, redo Stage 3 in small steps on `/shared-chat`, one idea each: **3a** JSON envelope → **3b** typed `send` → **3c** Zod validation → **3d** acks (no timeouts at first). Rooms and the typing indicator are optional extras.
+
 Goal: stop sending random strings and adopt a real protocol.
 
 - [ ] A single envelope: `{ type, payload }` (plus `id` / `ts` when needed)

@@ -42,7 +42,7 @@ Goal: use the native API comfortably, with no libraries.
 **Task 1:** A plain page (no React yet, or a single bare component) that connects to the echo server, sends text from an input, and logs everything it receives plus every state change.
 **Task 2:** Stop the server while connected and see what `close` gives you. Try a wrong URL and compare.
 
-## Stage 2: Using it in React 🟡
+## Stage 2: Using it in React ✅
 
 Goal: a socket that behaves correctly with React's lifecycle.
 
@@ -50,11 +50,11 @@ Goal: a socket that behaves correctly with React's lifecycle.
 - [x] `useEffect` setup and cleanup; the **StrictMode double-mount** trap (two connections, or a closed-too-early socket)
 - [x] Stale closures in `onmessage` handlers; refs vs state
 - [x] Turning "socket status" into UI state (connecting, online, offline)
-- [ ] `useSyncExternalStore` as a clean way to subscribe to an external source
+- [x] `useSyncExternalStore` as a clean way to subscribe to an external source
 
 **Task:** `useWebSocket(url)` hook → `{ status, lastMessage, send }`. Build a simple chat UI on top of it against the broadcast server (open two tabs).
 
-## Stage 3: Message design ⬜
+## Stage 3: Message design 🟡
 
 Goal: stop sending random strings and adopt a real protocol.
 

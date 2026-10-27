@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { ReceivedMessage, useWebSocket } from '../../hooks/useWebSocket.ts';
 import { useAppTheme } from '../../styles/hooks.ts';
 import {
@@ -16,24 +16,25 @@ const SERVER_URL = 'ws://localhost:8081';
 
 export const Chat = () => {
   const theme = useAppTheme();
-  const [messages, setMessages] = useState<ReceivedMessage[]>([]);
-  const [draft, setDraft] = useState('');
+  const [chatMessages, setChatMessages] = useState<ReceivedMessage[]>([]);
+  const [messageDraft, setMessageDraft] = useState('');
 
   const { status, lastMessage, send } = useWebSocket({
     url: SERVER_URL,
     options: {
       onMessage: (message) => {
-        setMessages((prevMessages) => [...prevMessages, message]);
+        setChatMessages((prevMessages) => [...prevMessages, message]);
       },
     },
   });
 
-  const handleSend = () => {
-    const trimmedDraft = draft.trim();
+  const handleSend = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedMessageDraft = messageDraft.trim();
 
-    if (trimmedDraft !== '') {
-      send(trimmedDraft);
-      setDraft('');
+    if (trimmedMessageDraft !== '') {
+      send(trimmedMessageDraft);
+      setMessageDraft('');
     }
   };
 
@@ -47,20 +48,25 @@ export const Chat = () => {
     <div css={containerStyles(theme)}>
       <div css={statusBadgeStyles(theme, statusColors)}>{`Status: ${status}`}</div>
       <div css={messageListStyles(theme)}>
-        {messages.map((message, index) => (
+        {chatMessages.map((message, index) => (
           <span key={`message-${index}`} css={messageStyles(theme)}>
             {`${new Date(message.receivedAt).toLocaleTimeString()}: ${message.text}`}
           </span>
         ))}
       </div>
       <div css={lastMessageStyles(theme)}>{lastMessage?.text ?? '-'}</div>
-      <div css={inputRowStyles(theme)}>
-        <input type="text" value={draft} onChange={(e) => setDraft(e.target.value)} css={inputStyles(theme)} />
+      <form css={inputRowStyles(theme)} onSubmit={handleSend}>
+        <input
+          type="text"
+          value={messageDraft}
+          onChange={(e) => setMessageDraft(e.target.value)}
+          css={inputStyles(theme)}
+        />
 
-        <button disabled={draft.trim() === '' || status !== 'open'} onClick={handleSend} css={sendButtonStyles(theme)}>
+        <button disabled={messageDraft.trim() === '' || status !== 'open'} type="submit" css={sendButtonStyles(theme)}>
           Send
         </button>
-      </div>
+      </form>
     </div>
   );
 };

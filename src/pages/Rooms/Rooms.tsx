@@ -47,14 +47,14 @@ const formatTyping = (users: string[]) => {
 export const Rooms = () => {
   const theme = useAppTheme();
   const { status, user, room, messages, typingUsers } = useRoomChat();
-  const [userDraft, setUserDraft] = useState('');
-  const [roomDraft, setRoomDraft] = useState('general');
+  const [userNameDraft, setNameUserDraft] = useState('');
+  const [selectedRoomDraft, setSelectedRoomDraft] = useState('general');
   const [messageDraft, setMessageDraft] = useState('');
 
   const handleJoin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const trimmedUser = userDraft.trim();
-    const trimmedRoom = roomDraft.trim();
+    const trimmedUser = userNameDraft.trim();
+    const trimmedRoom = selectedRoomDraft.trim();
 
     if (trimmedUser !== '' && trimmedRoom !== '') {
       join(trimmedRoom, trimmedUser);
@@ -121,8 +121,8 @@ export const Rooms = () => {
             Your name
             <input
               type="text"
-              value={userDraft}
-              onChange={(e) => setUserDraft(e.target.value)}
+              value={userNameDraft}
+              onChange={(e) => setNameUserDraft(e.target.value)}
               css={inputStyles(theme)}
             />
           </label>
@@ -130,14 +130,14 @@ export const Rooms = () => {
             Room
             <input
               type="text"
-              value={roomDraft}
-              onChange={(e) => setRoomDraft(e.target.value)}
+              value={selectedRoomDraft}
+              onChange={(e) => setSelectedRoomDraft(e.target.value)}
               css={inputStyles(theme)}
             />
           </label>
           <button
             type="submit"
-            disabled={userDraft.trim() === '' || roomDraft.trim() === '' || status !== 'open'}
+            disabled={userNameDraft.trim() === '' || selectedRoomDraft.trim() === '' || status !== 'open'}
             css={sendButtonStyles(theme)}
           >
             Join

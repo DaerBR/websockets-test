@@ -19,6 +19,7 @@ Pre-commit hook (Husky): runs a full `tsc` type-check, then `lint-staged` (ESLin
 React 19, TypeScript, Vite, Redux Toolkit, React Router v8, Emotion (CSS-in-JS), React Hook Form + Zod, Axios, Sonner (toasts), FontAwesome icons.
 
 **Treat these as defaults, not requirements** — they're what I reach for absent other constraints. If a project says "use Tailwind" or "use MUI," swap the relevant piece rather than fighting the default:
+
 - **Redux Toolkit** is the heaviest opinion here. Small projects may not need it at all — Context or nothing might be enough.
 - **Emotion** (`css` prop, configured via `jsxImportSource` in `vite.config.ts`) is the CSS-in-JS default. Access the theme via `useAppTheme()` from `src/styles/hooks.ts`, not `useTheme()` directly (it's typed against `GlobalTheme` via `src/styles/emotion.d.ts`).
 
@@ -43,11 +44,12 @@ src/
 ### `useThunk`
 
 `src/store/hooks/useThunk.ts` wraps dispatching a Redux Toolkit thunk with:
+
 - a success/error toast (via `sonner`)
 - an optional redirect on success (`successRedirectRoute`)
 - an optional global loading flag (`useGlobalLoader`), read from `GlobalLoadingIndicatorContext` in `src/contexts/`
 
-It works out of the box with no thunks defined yet — `useContext` just falls back to the context's default (`isVisible: false`, no-op setter) if nothing provides it. There's intentionally no `MainWrapper`/spinner component wired up to *show* that loading state, since `components/` starts empty — add a provider + spinner per-project once there's UI to hook it to (see `dual-cookbook-client`'s `MainWrapper` for a reference implementation: a `useState` + `useMemo`'d context value wrapping the app, toggled by `handleShowLoadingIndicator`).
+It works out of the box with no thunks defined yet — `useContext` just falls back to the context's default (`isVisible: false`, no-op setter) if nothing provides it. There's intentionally no `MainWrapper`/spinner component wired up to _show_ that loading state, since `components/` starts empty — add a provider + spinner per-project once there's UI to hook it to (see `dual-cookbook-client`'s `MainWrapper` for a reference implementation: a `useState` + `useMemo`'d context value wrapping the app, toggled by `handleShowLoadingIndicator`).
 
 ## Environment
 

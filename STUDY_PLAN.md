@@ -9,7 +9,7 @@ Learning WebSockets from scratch, client side first, then the server side. Each 
 - **Client:** this project (`websockets/websockets-test`), my React + TS + Vite template.
 - **Server:** a separate sibling folder, `websockets/websockets-server/` (plain Node + TypeScript + the [`ws`](https://github.com/websockets/ws) library).
   - Stages 1–4: Claude provides a small, ready-made server so the focus stays on the client. Reading it is encouraged, but writing it is not required.
-  - Stage 5 and later: I write or rewrite the server myself.
+  - Stage 5 and later: Claude still writes the server code, but each step comes with a lesson. I read it first, then examine the code and test it.
 - **Main tool:** Chrome DevTools → Network → filter **Socket** → click the connection → **Messages** tab.
 
 ---
@@ -83,17 +83,19 @@ Goal: survive real networks. Most production bugs live here.
 
 **Task:** Make the chat survive a server restart, a laptop sleep, and DevTools "Offline" mode without losing or duplicating messages.
 
-## Stage 5: The server side ⬜
+## Stage 5: The server side ✅
 
-Goal: write the server myself.
+> Done in steps 5a–5f: `../websockets-server/src/server.ts` (`pnpm server`, port 8081) replaces `broadcast.ts`; lesson `lessons/stage-5-server.md` §1–§6. Test helper: `pnpm dead-client`.
 
-- [ ] Node + `ws`: `WebSocketServer`, the `connection` event, per-client state
-- [ ] Broadcasting, rooms, tracking connected clients
-- [ ] Server-side ping/pong and terminating dead clients
-- [ ] Attaching to an existing HTTP server (Express) and handling `upgrade` manually
-- [ ] Graceful shutdown (close code `1001`)
+Goal: understand the server side (Claude writes the code, I read and test it).
 
-**Task:** Rewrite the Stage 1–4 server from scratch so the existing client works unchanged.
+- [x] Node + `ws`: `WebSocketServer`, the `connection` event, per-client state
+- [x] Broadcasting, rooms, tracking connected clients (rooms: the Stage 3 `rooms.ts`)
+- [x] Server-side ping/pong and terminating dead clients
+- [x] Attaching to an existing HTTP server (Express) and handling `upgrade` manually
+- [x] Graceful shutdown (close code `1001`)
+
+**Task:** Rewrite the Stage 1–4 broadcast server from scratch (`src/server.ts`) so the existing client works unchanged. Claude writes the code step by step from the lesson `lessons/stage-5-server.md`; I read the lesson, examine the code, and test it.
 
 ## Stage 6: Auth and security ⬜
 

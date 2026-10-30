@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { send } from '../../socket/chatStore.ts';
+import { connect, disconnect, send } from '../../socket/chatStore.ts';
 import { useChatMessages, useChatStatus } from '../../socket/hooks.ts';
 import { useAppTheme } from '../../styles/hooks.ts';
 import {
@@ -11,6 +11,10 @@ import {
   sendButtonStyles,
   statusBadgeStyles,
 } from '../Chat/styles.ts';
+import { leaveButtonStyles, roomHeaderStyles } from '../Rooms/styles.ts';
+import { connectionButtonsStyles } from './styles.ts';
+
+const SERVER_URL = 'ws://localhost:8081';
 
 export const SharedChat = () => {
   const theme = useAppTheme();
@@ -36,7 +40,22 @@ export const SharedChat = () => {
 
   return (
     <div css={containerStyles(theme)}>
-      <div css={statusBadgeStyles(theme, statusColors)}>{`Status: ${status}`}</div>
+      <div css={roomHeaderStyles(theme)}>
+        <div css={statusBadgeStyles(theme, statusColors)}>{`Status: ${status}`}</div>
+        <div css={connectionButtonsStyles(theme)}>
+          <button
+            type="button"
+            disabled={status !== 'closed'}
+            onClick={() => connect(SERVER_URL)}
+            css={leaveButtonStyles(theme)}
+          >
+            Connect
+          </button>
+          <button type="button" onClick={disconnect} css={leaveButtonStyles(theme)}>
+            Disconnect
+          </button>
+        </div>
+      </div>
       <div css={messageListStyles(theme)}>
         {chatMessages.map((message, index) => (
           <span key={`message-${index}`} css={messageStyles(theme)}>
@@ -52,7 +71,7 @@ export const SharedChat = () => {
           css={inputStyles(theme)}
         />
 
-        <button disabled={messageDraft.trim() === '' || status !== 'open'} type="submit" css={sendButtonStyles(theme)}>
+        <button disabled={messageDraft.trim() === ''} type="submit" css={sendButtonStyles(theme)}>
           Send
         </button>
       </form>

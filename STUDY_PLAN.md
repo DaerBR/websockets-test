@@ -54,30 +54,32 @@ Goal: a socket that behaves correctly with React's lifecycle.
 
 **Task:** `useWebSocket(url)` hook → `{ status, lastMessage, send }`. Build a simple chat UI on top of it against the broadcast server (open two tabs).
 
-## Stage 3: Message design 🟡
+## Stage 3: Message design ✅
 
-> **Paused (2026-10-27).** The original task below bundled too many ideas at once. A finished reference version is in `/rooms` (`src/socket/roomChatStore.ts`, `src/protocol/messages.ts`, server: `pnpm rooms`), with the lesson in `lessons/stage-3-message-design.md`. When resuming, redo Stage 3 in small steps on `/shared-chat`, one idea each: **3a** JSON envelope → **3b** typed `send` → **3c** Zod validation → **3d** acks (no timeouts at first). Rooms and the typing indicator are optional extras.
+> Done via the reference implementation in `/rooms` (`src/socket/roomChatStore.ts`, `src/protocol/messages.ts`, server: `pnpm rooms`), the lesson `lessons/stage-3-message-design.md` and the walkthrough `lessons/stage-3-rooms-walkthrough.md`.
 
 Goal: stop sending random strings and adopt a real protocol.
 
-- [ ] A single envelope: `{ type, payload }` (plus `id` / `ts` when needed)
-- [ ] TypeScript discriminated unions for client → server and server → client messages
-- [ ] Runtime validation of incoming messages with Zod (never trust the wire)
-- [ ] Request/response over a socket: correlation IDs, acknowledgements, timeouts
-- [ ] Rooms/channels from the client's perspective: `subscribe` / `unsubscribe` messages
+- [x] A single envelope: `{ type, payload }` (plus `id` / `ts` when needed)
+- [x] TypeScript discriminated unions for client → server and server → client messages
+- [x] Runtime validation of incoming messages with Zod (never trust the wire)
+- [x] Request/response over a socket: correlation IDs, acknowledgements, timeouts
+- [x] Rooms/channels from the client's perspective: `subscribe` / `unsubscribe` messages
 
 **Task:** Chat with rooms, a "user is typing…" indicator, and acked messages (show ✓ when the server confirms). All messages are typed and validated.
 
-## Stage 4: Reliability ⬜
+## Stage 4: Reliability ✅
+
+> Done in small steps 4a–4f on `/shared-chat` (`src/socket/chatStore.ts`, server: `pnpm broadcast`), lesson `lessons/stage-4-reliability.md` §1–§8.
 
 Goal: survive real networks. Most production bugs live here.
 
-- [ ] Detecting dead connections: why TCP can look "open" while dead; app-level heartbeat
-- [ ] Reconnecting with **exponential backoff + jitter**; stopping on purpose vs retrying
-- [ ] Reacting to `online` / `offline` and `visibilitychange`
-- [ ] Outgoing queue while disconnected; what should and shouldn't be replayed
-- [ ] Catching up after reconnect: last-seen event ID, refetching state over HTTP
-- [ ] Duplicate and out-of-order messages: idempotency
+- [x] Detecting dead connections: why TCP can look "open" while dead; app-level heartbeat
+- [x] Reconnecting with **exponential backoff + jitter**; stopping on purpose vs retrying
+- [x] Reacting to `online` / `offline` and `visibilitychange`
+- [x] Outgoing queue while disconnected; what should and shouldn't be replayed
+- [x] Catching up after reconnect: last-seen event ID, refetching state over HTTP
+- [x] Duplicate and out-of-order messages: idempotency
 
 **Task:** Make the chat survive a server restart, a laptop sleep, and DevTools "Offline" mode without losing or duplicating messages.
 

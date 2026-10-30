@@ -75,5 +75,6 @@ export const leaveButtonStyles = (theme: GlobalTheme) =>
     color: theme.colors.text.main,
     font: 'inherit',
     cursor: 'pointer',
-    '&:hover': { backgroundColor: theme.colors.neutral.surfaceSubtle },
+    '&:hover:not(:disabled)': { backgroundColor: theme.colors.neutral.surfaceSubtle },
+    '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
   });

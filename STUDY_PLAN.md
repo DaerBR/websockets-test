@@ -97,22 +97,29 @@ Goal: understand the server side (Claude writes the code, I read and test it).
 
 **Task:** Rewrite the Stage 1–4 broadcast server from scratch (`src/server.ts`) so the existing client works unchanged. Claude writes the code step by step from the lesson `lessons/stage-5-server.md`; I read the lesson, examine the code, and test it.
 
-## Stage 6: Auth and security ⬜
+## Stage 6: Auth and security ✅
 
-- [ ] Authenticating the handshake: cookies (sent automatically, same-site rules), a token in the query string (and why it leaks into logs), a first-message auth
-- [ ] Checking the `Origin` header (Cross-Site WebSocket Hijacking)
-- [ ] Validating message size and shape on the server; rate limiting per connection
-- [ ] Authorization per message/room, not only at connect time
+> Done in steps 6a–6h on `../websockets-server/src/server.ts` (+ `src/auth/sessions.ts`, `src/auth/authController.ts`); lesson `lessons/stage-6-auth-security.md` §1–§8. Client: Vite proxy (`/api`, `/ws`), `src/api/auth.ts`, `src/auth/authStore.ts`, the global `TopBar`/`UserBar`. Demo password: `Password123!`; log in as `Admin` for the admin role.
 
-**Task:** Add login (fake/session cookie is fine) and allow only authenticated users to join rooms.
+- [x] Authenticating the handshake: cookies (sent automatically, same-site rules), a token in the query string (and why it leaks into logs), a first-message auth
+- [x] Checking the `Origin` header (Cross-Site WebSocket Hijacking)
+- [x] Validating message size and shape on the server; rate limiting per connection
+- [x] Authorization per message/room, not only at connect time
+
+**Task:** Add login (fake/session cookie is fine) and allow only authenticated users to join rooms. _(Done on the shared chat instead of `/rooms`: only logged-in users can connect, identity and roles come from the server session, admin-only `/kick`, logout closes the session's sockets. `rooms.ts` stays a Stage 3 reference.)_
 
 ## Stage 7: State management integration ⬜
 
-- [ ] Redux middleware that owns the socket and dispatches actions for incoming messages
-- [ ] RTK Query streaming updates via `onCacheEntryAdded` (relevant to dual-cookbook's `rtk_query_test_branch`)
-- [ ] Optimistic updates confirmed or reverted by server events
+Goal: the app-state model of the dual-cookbook project (Redux Toolkit slices + `createAsyncThunk` thunks + `useAppSelector`/`useAppDispatch`, HTTP through `apiRequest`), with the socket plugged into it.
 
-**Task:** Move the chat's socket handling into Redux (middleware or RTK Query), and compare it with the hook version.
+- [ ] Auth the cookbook way: `authSlice` + `thunks/auth.ts` (`createAsyncThunk`), replacing `src/auth/authStore.ts` (the Stage 6 module store)
+- [ ] Chat state in a slice (`chatSlice`: status, messages); components read it with `useAppSelector` instead of `useSyncExternalStore`
+- [ ] Redux middleware that owns the socket: socket events become dispatched actions; connect/disconnect/send become actions
+- [ ] Login/logout → connect/disconnect coordinated inside Redux (replacing `authStore.subscribe` in `main.tsx`)
+- [ ] Optimistic updates confirmed or reverted by server events
+- [ ] ~~RTK Query streaming updates via `onCacheEntryAdded`~~ (skipped for now)
+
+**Task:** Move auth and the shared chat's socket handling into Redux, the way dual-cookbook structures its state. Compare it with the Stage 2 hook (`/chat`) and the Stage 4–6 module store, then remove `/chat`.
 
 ## Stage 8: Scaling and libraries (optional) ⬜
 

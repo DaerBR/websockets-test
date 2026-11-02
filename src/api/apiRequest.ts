@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { API_URL } from './constants';
 
+const HANDLES_OWN_UNAUTHORIZED = ['/login'];
+
 export const apiRequest = create({
   baseURL: API_URL,
   withCredentials: true,
@@ -19,14 +21,15 @@ apiRequest.interceptors.response.use(
   (response) => response,
   async (error) => {
     const status = error.response?.status;
+    const handlesOwnUnauthorized = HANDLES_OWN_UNAUTHORIZED.includes(error.config?.url);
 
-    if (status === 401 || status === 403) {
+    if ((status === 401 && !handlesOwnUnauthorized) || status === 403) {
       console.info('Unauthorized access, redirecting to sign-in page');
       currentNavigate?.('/');
     }
 
     if (status === 404) {
-      currentNavigate?.('/error');
+      currentNavigate?.('/not-found');
     }
 
     return Promise.reject(error);

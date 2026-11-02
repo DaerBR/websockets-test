@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { ReceivedMessage, Status } from '../hooks/useWebSocket.ts';
+import type { Status } from '../hooks/useWebSocket.ts';
+import { loadUser } from '../auth/authStore.ts';
 
 const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 30000;
@@ -9,7 +10,7 @@ const MAX_OUTBOX_SIZE = 50;
 const MAX_OUTBOX_AGE_MS = 30000;
 
 let status: Status = 'closed';
-let messages: ReceivedMessage[] = [];
+let messages: SharedChatMessage[] = [];
 let socket: WebSocket | null = null;
 let serverUrl: string | null = null;
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -21,7 +22,22 @@ let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let shouldReconnect = true;
 const listeners = new Set<() => void>();
 
-const chatEventSchema = z.object({ id: z.number().int(), text: z.string() });
+// The two kinds of JSON frames the server sends (6d). `type` tells them apart.
+const chatEventSchema = z.object({
+  type: z.literal('chat'),
+  id: z.number().int(),
+  author: z.string(),
+  text: z.string(),
+});
+const systemEventSchema = z.object({
+  type: z.literal('system'),
+  text: z.string(),
+});
+const serverEventSchema = z.discriminatedUnion('type', [chatEventSchema, systemEventSchema]);
+
+export type SharedChatMessage =
+  | { author: string; kind: 'chat'; receivedAt: number; text: string }
+  | { kind: 'system'; receivedAt: number; text: string };
 
 const flushOutbox = () => {
   if (socket?.readyState !== WebSocket.OPEN) {
@@ -44,9 +60,9 @@ const flushOutbox = () => {
   }
 };
 
-const parseChatEvent = (raw: string) => {
+const parseServerEvent = (raw: string) => {
   try {
-    const result = chatEventSchema.safeParse(JSON.parse(raw));
+    const result = serverEventSchema.safeParse(JSON.parse(raw));
 
     return result.success ? result.data : null;
   } catch {
@@ -94,7 +110,7 @@ const setStatus = (next: Status) => {
   notify();
 };
 
-const addMessage = (message: ReceivedMessage) => {
+const addMessage = (message: SharedChatMessage) => {
   messages = [...messages, message];
   notify();
 };
@@ -163,21 +179,28 @@ export const connect = (url: string) => {
 
       return;
     }
-    const chatEvent = parseChatEvent(event.data);
+    const serverEvent = parseServerEvent(event.data);
 
-    if (!chatEvent) {
+    if (!serverEvent) {
       console.warn(`Ignored invalid message: ${event.data}`);
 
       return;
     }
 
-    if (chatEvent.id <= lastSeenId) {
-      console.info(`Ignored duplicate #${chatEvent.id}`);
+    // No id: not part of the chat history, so no dedup and no lastSeenId.
+    if (serverEvent.type === 'system') {
+      addMessage({ kind: 'system', text: serverEvent.text, receivedAt: Date.now() });
 
       return;
     }
-    lastSeenId = chatEvent.id;
-    addMessage({ text: chatEvent.text, receivedAt: Date.now() });
+
+    if (serverEvent.id <= lastSeenId) {
+      console.info(`Ignored duplicate #${serverEvent.id}`);
+
+      return;
+    }
+    lastSeenId = serverEvent.id;
+    addMessage({ kind: 'chat', author: serverEvent.author, text: serverEvent.text, receivedAt: Date.now() });
   });
 
   socket.addEventListener('error', () => {
@@ -189,6 +212,29 @@ export const connect = (url: string) => {
     stopHeartbeat();
     socket = null;
     setStatus('closed');
+
+    if (event.code === 4401) {
+      console.info('Not reconnecting: unauthorized');
+      shouldReconnect = false;
+      loadUser();
+
+      return;
+    }
+
+    if (event.code === 4403) {
+      console.info(`Not reconnecting: ${event.reason}`);
+      shouldReconnect = false;
+      addMessage({ kind: 'system', text: `You were disconnected: ${event.reason}`, receivedAt: Date.now() });
+
+      return;
+    }
+
+    if (event.code === 1008) {
+      console.info(`Not reconnecting: policy violation (${event.reason})`);
+      shouldReconnect = false;
+
+      return;
+    }
 
     if (!shouldReconnect) {
       console.info('Not reconnecting: closed on purpose');

@@ -11,8 +11,7 @@ import {
   sendButtonStyles,
   statusBadgeStyles,
 } from './styles.ts';
-
-const SERVER_URL = 'ws://localhost:8081';
+import { SERVER_URL } from '../../api/constants.ts';
 
 export const Chat = () => {
   const theme = useAppTheme();

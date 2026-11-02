@@ -6,20 +6,22 @@ import {
   containerStyles,
   inputRowStyles,
   inputStyles,
+  lastMessageStyles,
   messageListStyles,
   messageStyles,
   sendButtonStyles,
   statusBadgeStyles,
 } from '../Chat/styles.ts';
-import { leaveButtonStyles, roomHeaderStyles } from '../Rooms/styles.ts';
+import { leaveButtonStyles, ownMessageStyles, roomHeaderStyles } from '../Rooms/styles.ts';
 import { connectionButtonsStyles } from './styles.ts';
-
-const SERVER_URL = 'ws://localhost:8081';
+import { MAX_MESSAGE_LENGTH, SERVER_URL } from '../../api/constants.ts';
+import { useAuth } from '../../auth/hooks.ts';
 
 export const SharedChat = () => {
   const theme = useAppTheme();
   const status = useChatStatus();
   const chatMessages = useChatMessages();
+  const { user } = useAuth();
   const [messageDraft, setMessageDraft] = useState('');
 
   const handleSend = (event: FormEvent<HTMLFormElement>) => {
@@ -57,11 +59,26 @@ export const SharedChat = () => {
         </div>
       </div>
       <div css={messageListStyles(theme)}>
-        {chatMessages.map((message, index) => (
-          <span key={`message-${index}`} css={messageStyles(theme)}>
-            {`${new Date(message.receivedAt).toLocaleTimeString()}: ${message.text}`}
-          </span>
-        ))}
+        {chatMessages.map((message, index) => {
+          const time = new Date(message.receivedAt).toLocaleTimeString();
+
+          if (message.kind === 'system') {
+            return (
+              <span key={`message-${index}`} css={lastMessageStyles(theme)}>
+                {`${time}: ${message.text}`}
+              </span>
+            );
+          }
+
+          return (
+            <span
+              key={`message-${index}`}
+              css={message.author === user ? ownMessageStyles(theme) : messageStyles(theme)}
+            >
+              {`${time} ${message.author}: ${message.text}`}
+            </span>
+          );
+        })}
       </div>
       <form css={inputRowStyles(theme)} onSubmit={handleSend}>
         <input
@@ -69,6 +86,7 @@ export const SharedChat = () => {
           value={messageDraft}
           onChange={(e) => setMessageDraft(e.target.value)}
           css={inputStyles(theme)}
+          maxLength={MAX_MESSAGE_LENGTH}
         />
 
         <button disabled={messageDraft.trim() === ''} type="submit" css={sendButtonStyles(theme)}>

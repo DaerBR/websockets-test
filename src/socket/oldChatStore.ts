@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Status } from '../hooks/useWebSocket.ts';
-import { loadUser } from '../auth/authStore.ts';
+import { loadUser } from '../old-auth/authStore.ts';
 
 const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 30000;

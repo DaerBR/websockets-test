@@ -99,7 +99,7 @@ Goal: understand the server side (Claude writes the code, I read and test it).
 
 ## Stage 6: Auth and security ✅
 
-> Done in steps 6a–6h on `../websockets-server/src/server.ts` (+ `src/auth/sessions.ts`, `src/auth/authController.ts`); lesson `lessons/stage-6-auth-security.md` §1–§8. Client: Vite proxy (`/api`, `/ws`), `src/api/auth.ts`, `src/auth/authStore.ts`, the global `TopBar`/`UserBar`. Demo password: `Password123!`; log in as `Admin` for the admin role.
+> Done in steps 6a–6h on `../websockets-server/src/server.ts` (+ `src/auth/sessions.ts`, `src/auth/authController.ts`); lesson `lessons/stage-6-auth-security.md` §1–§8. Client: Vite proxy (`/api`, `/ws`), `src/api/auth.ts`, `src/auth/authStore.ts` (kept after Stage 7 as `src/api/old-auth.ts` + `src/old-auth/`, an example of an external store), the global `TopBar`/`UserBar`. Demo password: `Password123!`; log in as `Admin` for the admin role.
 
 - [x] Authenticating the handshake: cookies (sent automatically, same-site rules), a token in the query string (and why it leaks into logs), a first-message auth
 - [x] Checking the `Origin` header (Cross-Site WebSocket Hijacking)
@@ -108,18 +108,20 @@ Goal: understand the server side (Claude writes the code, I read and test it).
 
 **Task:** Add login (fake/session cookie is fine) and allow only authenticated users to join rooms. _(Done on the shared chat instead of `/rooms`: only logged-in users can connect, identity and roles come from the server session, admin-only `/kick`, logout closes the session's sockets. `rooms.ts` stays a Stage 3 reference.)_
 
-## Stage 7: State management integration ⬜
+## Stage 7: State management integration ✅
+
+> Done in steps 7a–7f, lesson `lessons/stage-7-redux.md` §1–§6. State: `src/store/slices/authSlice.ts` + `thunks/auth.ts`, `chatSlice.ts`; the socket in `src/middleware/socketMiddleware.ts`, auth → connect/disconnect in `src/middleware/authListenerMiddleware.ts`. Server: 7e client ids (`clientId` echo, `rejected` frames). Kept as examples: `src/old-auth/`, `src/socket/oldChatStore.ts`, `src/hooks/useWebSocket.ts`. `/chat` removed.
 
 Goal: the app-state model of the dual-cookbook project (Redux Toolkit slices + `createAsyncThunk` thunks + `useAppSelector`/`useAppDispatch`, HTTP through `apiRequest`), with the socket plugged into it.
 
-- [ ] Auth the cookbook way: `authSlice` + `thunks/auth.ts` (`createAsyncThunk`), replacing `src/auth/authStore.ts` (the Stage 6 module store)
-- [ ] Chat state in a slice (`chatSlice`: status, messages); components read it with `useAppSelector` instead of `useSyncExternalStore`
-- [ ] Redux middleware that owns the socket: socket events become dispatched actions; connect/disconnect/send become actions
-- [ ] Login/logout → connect/disconnect coordinated inside Redux (replacing `authStore.subscribe` in `main.tsx`)
-- [ ] Optimistic updates confirmed or reverted by server events
+- [x] Auth the cookbook way: `authSlice` + `thunks/auth.ts` (`createAsyncThunk`), replacing `src/auth/authStore.ts` (the Stage 6 module store, kept as an example in `src/old-auth/`)
+- [x] Chat state in a slice (`chatSlice`: status, messages); components read it with `useAppSelector` instead of `useSyncExternalStore`
+- [x] Redux middleware that owns the socket: socket events become dispatched actions; connect/disconnect/send become actions
+- [x] Login/logout → connect/disconnect coordinated inside Redux (replacing `authStore.subscribe` in `main.tsx`)
+- [x] Optimistic updates confirmed or reverted by server events
 - [ ] ~~RTK Query streaming updates via `onCacheEntryAdded`~~ (skipped for now)
 
-**Task:** Move auth and the shared chat's socket handling into Redux, the way dual-cookbook structures its state. Compare it with the Stage 2 hook (`/chat`) and the Stage 4–6 module store, then remove `/chat`.
+**Task:** Move auth and the shared chat's socket handling into Redux, the way dual-cookbook structures its state. Compare it with the Stage 2 hook (`/chat`) and the Stage 4–6 module store, then remove `/chat`. _(Done: comparison table in §6 of the lesson; `/chat` page and route removed, its styles moved to `src/styles/chatStyles.ts`.)_
 
 ## Stage 8: Scaling and libraries (optional) ⬜
 

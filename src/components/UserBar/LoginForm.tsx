@@ -1,30 +1,22 @@
 import { FormEvent, useState } from 'react';
-import { isAxiosError } from 'axios';
-import { inputStyles, sendButtonStyles } from '../../pages/Chat/styles.ts';
+import { inputStyles, sendButtonStyles } from '../../styles/chatStyles.ts';
 import { useAppTheme } from '../../styles/hooks.ts';
-import { signIn } from '../../auth/authStore.ts';
 import { loginErrorStyles, loginFormStyles } from './styles.ts';
+import { useThunk } from '../../store/hooks/useThunk.ts';
+import { signIn } from '../../store/thunks/auth.ts';
+import { useAppSelector } from '../../store/hooks/hooks.ts';
 
 export const LoginForm = () => {
   const theme = useAppTheme();
   const [userName, setUserName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dispatchSignIn, signInError] = useThunk(signIn);
+  const isLoading = useAppSelector((state) => state.auth.isLoading);
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
 
-    try {
-      await signIn(userName.trim(), password);
-    } catch (loginError) {
-      const isWrongPassword = isAxiosError(loginError) && loginError.response?.status === 401;
-      setError(isWrongPassword ? 'Wrong name or password' : 'Login failed, try again');
-    } finally {
-      setIsSubmitting(false);
-    }
+    await dispatchSignIn({ name: userName.trim(), password });
   };
 
   return (
@@ -38,6 +30,7 @@ export const LoginForm = () => {
         css={inputStyles(theme)}
       />
       <input
+        autoComplete="off"
         type="password"
         placeholder="Password"
         aria-label="Password"
@@ -47,12 +40,12 @@ export const LoginForm = () => {
       />
       <button
         type="submit"
-        disabled={userName.trim() === '' || password === '' || isSubmitting}
+        disabled={userName.trim() === '' || password === '' || isLoading}
         css={sendButtonStyles(theme)}
       >
         Log in
       </button>
-      {error && <span css={loginErrorStyles(theme)}>{error}</span>}
+      {signInError && 'message' in signInError && <span css={loginErrorStyles(theme)}>{signInError.message}</span>}
     </form>
   );
 };

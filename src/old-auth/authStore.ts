@@ -1,4 +1,4 @@
-import { fetchUser, login, logout } from '../api/auth.ts';
+import { fetchUser, login, logout } from '../api/old-auth.ts';
 
 type AuthState = { isUserFetched: boolean; role: 'admin' | 'user' | null; user: string | null };
 

@@ -1,5 +1,5 @@
-import { defineStyles } from '../../styles/defineStyles.ts';
-import type { GlobalTheme } from '../../styles/theme.ts';
+import { defineStyles } from './defineStyles.ts';
+import type { GlobalTheme } from './theme.ts';
 
 type StatusColors = GlobalTheme['colors']['primary' | 'success' | 'error'];
 

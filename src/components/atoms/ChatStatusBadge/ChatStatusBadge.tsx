@@ -1,10 +1,10 @@
-import { useChatStatus } from '../../../socket/hooks.ts';
 import { useAppTheme } from '../../../styles/hooks.ts';
 import { chatStatusBadgeStyles } from './styles.ts';
+import { useAppSelector } from '../../../store/hooks/hooks.ts';
 
 export const ChatStatusBadge = () => {
   const theme = useAppTheme();
-  const status = useChatStatus();
+  const status = useAppSelector((state) => state.chat.status);
 
   const statusColors = {
     connecting: theme.colors.primary,

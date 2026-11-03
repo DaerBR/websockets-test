@@ -9,7 +9,7 @@ import {
   messageStyles,
   sendButtonStyles,
   statusBadgeStyles,
-} from '../Chat/styles.ts';
+} from '../../styles/chatStyles.ts';
 import {
   deliveryStyles,
   fieldLabelStyles,

@@ -1,6 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { connect, disconnect, send } from '../../socket/chatStore.ts';
-import { useChatMessages, useChatStatus } from '../../socket/hooks.ts';
+import { connectRequested, disconnectRequested, messageSent, sendRequested } from '../../store/slices/chatSlice.ts';
 import { useAppTheme } from '../../styles/hooks.ts';
 import {
   containerStyles,
@@ -11,27 +10,43 @@ import {
   messageStyles,
   sendButtonStyles,
   statusBadgeStyles,
-} from '../Chat/styles.ts';
-import { leaveButtonStyles, ownMessageStyles, roomHeaderStyles } from '../Rooms/styles.ts';
+} from '../../styles/chatStyles.ts';
+import { deliveryStyles, leaveButtonStyles, ownMessageStyles, roomHeaderStyles } from '../Rooms/styles.ts';
 import { connectionButtonsStyles } from './styles.ts';
 import { MAX_MESSAGE_LENGTH, SERVER_URL } from '../../api/constants.ts';
-import { useAuth } from '../../auth/hooks.ts';
+import { useAppDispatch, useAppSelector } from '../../store/hooks/hooks.ts';
+
+// The same icons as /rooms (Stage 3).
+const deliveryLabels = {
+  pending: { icon: '⏳', title: 'Sending…' },
+  sent: { icon: '✓', title: 'Delivered to the server' },
+  failed: { icon: '✗', title: 'Not delivered' },
+};
 
 export const SharedChat = () => {
   const theme = useAppTheme();
-  const status = useChatStatus();
-  const chatMessages = useChatMessages();
-  const { user } = useAuth();
+  const status = useAppSelector((state) => state.chat.status);
+  const chatMessages = useAppSelector((state) => state.chat.messages);
+  const user = useAppSelector((state) => state.auth.userData?.name);
   const [messageDraft, setMessageDraft] = useState('');
+  const dispatch = useAppDispatch();
 
   const handleSend = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmedMessageDraft = messageDraft.trim();
 
-    if (trimmedMessageDraft !== '') {
-      send(trimmedMessageDraft);
-      setMessageDraft('');
+    if (trimmedMessageDraft === '' || !user) {
+      return;
     }
+
+    // Commands get a system answer, not a place in the list: plain text, not optimistic (7e).
+    if (trimmedMessageDraft.startsWith('/')) {
+      dispatch(sendRequested(trimmedMessageDraft));
+    } else {
+      dispatch(messageSent(trimmedMessageDraft, user));
+    }
+
+    setMessageDraft('');
   };
 
   const statusColors = {
@@ -48,12 +63,12 @@ export const SharedChat = () => {
           <button
             type="button"
             disabled={status !== 'closed'}
-            onClick={() => connect(SERVER_URL)}
+            onClick={() => dispatch(connectRequested(SERVER_URL))}
             css={leaveButtonStyles(theme)}
           >
             Connect
           </button>
-          <button type="button" onClick={disconnect} css={leaveButtonStyles(theme)}>
+          <button type="button" onClick={() => dispatch(disconnectRequested())} css={leaveButtonStyles(theme)}>
             Disconnect
           </button>
         </div>
@@ -70,12 +85,20 @@ export const SharedChat = () => {
             );
           }
 
+          const delivery = message.delivery ? deliveryLabels[message.delivery] : null;
+
           return (
             <span
               key={`message-${index}`}
               css={message.author === user ? ownMessageStyles(theme) : messageStyles(theme)}
             >
               {`${time} ${message.author}: ${message.text}`}
+              {delivery && (
+                <span title={delivery.title} css={deliveryStyles(theme, message.delivery === 'failed')}>
+                  {delivery.icon}
+                  {message.failReason && ` ${message.failReason}`}
+                </span>
+              )}
             </span>
           );
         })}

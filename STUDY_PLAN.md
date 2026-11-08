@@ -1,0 +1,150 @@
+# WebSockets Study Plan
+
+Learning WebSockets from scratch, client side first, then the server side. Each stage ends with a small hands-on task.
+
+**Status legend:** ⬜ not started · 🟡 in progress · ✅ done
+
+## Setup
+
+- **Client:** this project (`websockets/websockets-test`), my React + TS + Vite template.
+- **Server:** a separate sibling folder, `websockets/websockets-server/` (plain Node + TypeScript + the [`ws`](https://github.com/websockets/ws) library).
+  - Stages 1–4: Claude provides a small, ready-made server so the focus stays on the client. Reading it is encouraged, but writing it is not required.
+  - Stage 5 and later: Claude still writes the server code, but each step comes with a lesson. I read it first, then examine the code and test it.
+- **Main tool:** Chrome DevTools → Network → filter **Socket** → click the connection → **Messages** tab.
+
+---
+
+## Stage 0: How it works ✅
+
+Goal: know what happens on the wire before writing any code.
+
+- [x] Why WebSockets exist: limits of HTTP request/response, short polling, long polling
+- [x] The handshake: an HTTP `GET` with `Upgrade: websocket` + `Sec-WebSocket-Key` → `101 Switching Protocols`
+- [x] After the upgrade: one persistent TCP connection, **full-duplex** (either side sends at any time)
+- [x] Frames: text vs binary, fragmentation, masking (client → server only), control frames (ping, pong, close)
+- [x] `ws://` vs `wss://` (TLS); why `wss://` matters with proxies
+- [x] Close handshake and close codes (`1000` normal, `1001` going away, `1006` abnormal / no close frame, `1008` policy, `4000–4999` app-defined)
+- [x] Alternatives and when to choose them: SSE (`EventSource`), polling, plain fetch, WebTransport (just to know it exists)
+
+**Task:** Open any site that uses WebSockets (or the Stage 1 echo server), find the handshake in DevTools, and explain each request/response header in your own words.
+
+## Stage 1: The browser `WebSocket` API ✅
+
+Goal: use the native API comfortably, with no libraries.
+
+- [x] `new WebSocket(url, protocols?)`
+- [x] Events: `open`, `message`, `error`, `close` (and what `CloseEvent.code / reason / wasClean` mean)
+- [x] `readyState`: `CONNECTING`, `OPEN`, `CLOSING`, `CLOSED`, and why `send()` before `OPEN` throws
+- [x] `send()` with strings, `Blob`, `ArrayBuffer`; `binaryType`
+- [x] `bufferedAmount` and backpressure (basic idea)
+- [x] Why the `error` event tells you almost nothing (on purpose, for security)
+
+**Task 1:** A plain page (no React yet, or a single bare component) that connects to the echo server, sends text from an input, and logs everything it receives plus every state change.
+**Task 2:** Stop the server while connected and see what `close` gives you. Try a wrong URL and compare.
+
+## Stage 2: Using it in React ✅
+
+Goal: a socket that behaves correctly with React's lifecycle.
+
+- [x] Where the socket lives: inside a component, a custom hook, a module singleton, or context
+- [x] `useEffect` setup and cleanup; the **StrictMode double-mount** trap (two connections, or a closed-too-early socket)
+- [x] Stale closures in `onmessage` handlers; refs vs state
+- [x] Turning "socket status" into UI state (connecting, online, offline)
+- [x] `useSyncExternalStore` as a clean way to subscribe to an external source
+
+**Task:** `useWebSocket(url)` hook → `{ status, lastMessage, send }`. Build a simple chat UI on top of it against the broadcast server (open two tabs).
+
+## Stage 3: Message design ✅
+
+> Done via the reference implementation in `/rooms` (`src/socket/roomChatStore.ts`, `src/protocol/messages.ts`, server: `pnpm rooms`), the lesson `lessons/stage-3-message-design.md` and the walkthrough `lessons/stage-3-rooms-walkthrough.md`.
+
+Goal: stop sending random strings and adopt a real protocol.
+
+- [x] A single envelope: `{ type, payload }` (plus `id` / `ts` when needed)
+- [x] TypeScript discriminated unions for client → server and server → client messages
+- [x] Runtime validation of incoming messages with Zod (never trust the wire)
+- [x] Request/response over a socket: correlation IDs, acknowledgements, timeouts
+- [x] Rooms/channels from the client's perspective: `subscribe` / `unsubscribe` messages
+
+**Task:** Chat with rooms, a "user is typing…" indicator, and acked messages (show ✓ when the server confirms). All messages are typed and validated.
+
+## Stage 4: Reliability ✅
+
+> Done in small steps 4a–4f on `/shared-chat` (`src/socket/chatStore.ts`, server: `pnpm broadcast`), lesson `lessons/stage-4-reliability.md` §1–§8.
+
+Goal: survive real networks. Most production bugs live here.
+
+- [x] Detecting dead connections: why TCP can look "open" while dead; app-level heartbeat
+- [x] Reconnecting with **exponential backoff + jitter**; stopping on purpose vs retrying
+- [x] Reacting to `online` / `offline` and `visibilitychange`
+- [x] Outgoing queue while disconnected; what should and shouldn't be replayed
+- [x] Catching up after reconnect: last-seen event ID, refetching state over HTTP
+- [x] Duplicate and out-of-order messages: idempotency
+
+**Task:** Make the chat survive a server restart, a laptop sleep, and DevTools "Offline" mode without losing or duplicating messages.
+
+## Stage 5: The server side ✅
+
+> Done in steps 5a–5f: `../websockets-server/src/server.ts` (`pnpm server`, port 8081) replaces `broadcast.ts`; lesson `lessons/stage-5-server.md` §1–§6. Test helper: `pnpm dead-client`.
+
+Goal: understand the server side (Claude writes the code, I read and test it).
+
+- [x] Node + `ws`: `WebSocketServer`, the `connection` event, per-client state
+- [x] Broadcasting, rooms, tracking connected clients (rooms: the Stage 3 `rooms.ts`)
+- [x] Server-side ping/pong and terminating dead clients
+- [x] Attaching to an existing HTTP server (Express) and handling `upgrade` manually
+- [x] Graceful shutdown (close code `1001`)
+
+**Task:** Rewrite the Stage 1–4 broadcast server from scratch (`src/server.ts`) so the existing client works unchanged. Claude writes the code step by step from the lesson `lessons/stage-5-server.md`; I read the lesson, examine the code, and test it.
+
+## Stage 6: Auth and security ✅
+
+> Done in steps 6a–6h on `../websockets-server/src/server.ts` (+ `src/auth/sessions.ts`, `src/auth/authController.ts`); lesson `lessons/stage-6-auth-security.md` §1–§8. Client: Vite proxy (`/api`, `/ws`), `src/api/auth.ts`, `src/auth/authStore.ts` (kept after Stage 7 as `src/api/old-auth.ts` + `src/old-auth/`, an example of an external store), the global `TopBar`/`UserBar`. Demo password: `Password123!`; log in as `Admin` for the admin role.
+
+- [x] Authenticating the handshake: cookies (sent automatically, same-site rules), a token in the query string (and why it leaks into logs), a first-message auth
+- [x] Checking the `Origin` header (Cross-Site WebSocket Hijacking)
+- [x] Validating message size and shape on the server; rate limiting per connection
+- [x] Authorization per message/room, not only at connect time
+
+**Task:** Add login (fake/session cookie is fine) and allow only authenticated users to join rooms. _(Done on the shared chat instead of `/rooms`: only logged-in users can connect, identity and roles come from the server session, admin-only `/kick`, logout closes the session's sockets. `rooms.ts` stays a Stage 3 reference.)_
+
+## Stage 7: State management integration ✅
+
+> Done in steps 7a–7f, lesson `lessons/stage-7-redux.md` §1–§6. State: `src/store/slices/authSlice.ts` + `thunks/auth.ts`, `chatSlice.ts`; the socket in `src/middleware/socketMiddleware.ts`, auth → connect/disconnect in `src/middleware/authListenerMiddleware.ts`. Server: 7e client ids (`clientId` echo, `rejected` frames). Kept as examples: `src/old-auth/`, `src/socket/oldChatStore.ts`, `src/hooks/useWebSocket.ts`. `/chat` removed.
+
+Goal: the app-state model of the dual-cookbook project (Redux Toolkit slices + `createAsyncThunk` thunks + `useAppSelector`/`useAppDispatch`, HTTP through `apiRequest`), with the socket plugged into it.
+
+- [x] Auth the cookbook way: `authSlice` + `thunks/auth.ts` (`createAsyncThunk`), replacing `src/auth/authStore.ts` (the Stage 6 module store, kept as an example in `src/old-auth/`)
+- [x] Chat state in a slice (`chatSlice`: status, messages); components read it with `useAppSelector` instead of `useSyncExternalStore`
+- [x] Redux middleware that owns the socket: socket events become dispatched actions; connect/disconnect/send become actions
+- [x] Login/logout → connect/disconnect coordinated inside Redux (replacing `authStore.subscribe` in `main.tsx`)
+- [x] Optimistic updates confirmed or reverted by server events
+- [ ] ~~RTK Query streaming updates via `onCacheEntryAdded`~~ (skipped for now)
+
+**Task:** Move auth and the shared chat's socket handling into Redux, the way dual-cookbook structures its state. Compare it with the Stage 2 hook (`/chat`) and the Stage 4–6 module store, then remove `/chat`. _(Done: comparison table in §6 of the lesson; `/chat` page and route removed, its styles moved to `src/styles/chatStyles.ts`.)_
+
+## Stage 8: Scaling and libraries (optional) ⬜
+
+> Skipped for now (2026-11-03).
+
+- [ ] Why broadcasting breaks with more than one server instance; Redis pub/sub as the fix
+- [ ] Sticky sessions and load balancers
+- [ ] Socket.IO: what it adds (rooms, acks, reconnection, fallbacks), what it costs, and why it is **not** a WebSocket at the protocol level
+- [ ] Hosting notes: idle timeouts on proxies/PaaS (e.g. Render), free-tier sleeping
+
+## Stage 9: Final project, dual-cookbook ⬜
+
+> Skipped for now (2026-11-03). Design sketch of how it would be built (server + client): `lessons/stage-9-dual-cookbook.md`.
+
+Live updates between the two cookbook users: when one person creates, edits, or deletes a recipe/category, the other person's screen updates without a refresh.
+
+- [ ] Design the events (`recipe.created`, `recipe.updated`, …)
+- [ ] Server: broadcast after successful DB writes, authenticated with the existing session cookie
+- [ ] Client: update the `recipes` / `categories` slices from events; show a toast
+- [ ] Check that it works with Render hosting
+
+---
+
+## Notes and takeaways
+
+_(Add your own notes per stage here as you go.)_

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <script type="module" src="/src/stage1/main.ts"></script>
+    <style>
+      p {
+        margin: 0;
+      }
+    </style>
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px">
+        <button id="connect">Connect</button>
+        <button id="disconnect">Disconnect</button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px">
+        <label for="message">Add message:</label>
+        <input type="text" id="message" />
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px">
+        <button disabled id="send">Send</button>
+        <button disabled id="send-binary">Send binary</button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px">
+        <label for="binary-type">Select binary type</label>
+        <select id="binary-type">
+          <option value="blob">blob</option>
+          <option value="arraybuffer">arraybuffer</option>
+        </select>
+      </div>
+      <span style="margin-bottom: 12px" id="buffered"></span>
+      <div
+        id="log"
+        style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; font-family: monospace"
+      ></div>
+    </div>
+  </body>
+</html>

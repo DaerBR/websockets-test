@@ -125,12 +125,16 @@ Goal: the app-state model of the dual-cookbook project (Redux Toolkit slices + `
 
 ## Stage 8: Scaling and libraries (optional) ⬜
 
+> Skipped for now (2026-11-03).
+
 - [ ] Why broadcasting breaks with more than one server instance; Redis pub/sub as the fix
 - [ ] Sticky sessions and load balancers
 - [ ] Socket.IO: what it adds (rooms, acks, reconnection, fallbacks), what it costs, and why it is **not** a WebSocket at the protocol level
 - [ ] Hosting notes: idle timeouts on proxies/PaaS (e.g. Render), free-tier sleeping
 
 ## Stage 9: Final project, dual-cookbook ⬜
+
+> Skipped for now (2026-11-03). Design sketch of how it would be built (server + client): `lessons/stage-9-dual-cookbook.md`.
 
 Live updates between the two cookbook users: when one person creates, edits, or deletes a recipe/category, the other person's screen updates without a refresh.
 
